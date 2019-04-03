@@ -1,8 +1,12 @@
 import random
 
 class Tetris_Game:
-    def __init__(self, color_count):
-        self.color_count = color_count
+    def __init__(self, color_count, board_size, num_boards):
+        boards = []
+        for i in range(num_boards):
+            b = Tetris_Board(board_size, color_count)
+            boards.append(b)
+        self.boards = boards
 
 class Tetris_Board:
     def __init__(self, size, color_count):
