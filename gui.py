@@ -35,11 +35,16 @@ def main():
     board = Tetris_Board_Renderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     running = True
     pygame.init()
+    clock = pygame.time.Clock()
     screen = pygame.display.set_mode((12 * 32, 20 * 32))
+    game.start(5)
     while running:
+        elasped = clock.tick(30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        game.add_delta_time(elasped)
+        game.update()
         display = board.render()
         screen.blit(display, (0,0))
         pygame.display.flip()
