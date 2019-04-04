@@ -19,7 +19,9 @@ class Tetris_Board_Renderer:
         try:
             piece = self.board.current_piece
             value = piece.color
-            for x, y in piece.get_world_pattern():
+            for point in piece.get_world_pattern():
+                x = point.x
+                y = point.y
                 surface.blit(tiles[value - 1], (x * 32, y * 32))
         except:
             pass
@@ -40,7 +42,7 @@ def main():
     game.start(5)
     while running:
         try:
-            elasped = clock.tick(30)
+            elasped = clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False

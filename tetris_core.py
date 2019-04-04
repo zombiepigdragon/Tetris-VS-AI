@@ -13,7 +13,7 @@ class Point:
     @x.setter
     def x(self, value):
         value = int(value)
-        if value > Point.min_x and value < Point.max_x:
+        if value >= Point.min_x and value < Point.max_x:
             self._x = value
         else:
             raise ValueError()
@@ -25,7 +25,7 @@ class Point:
     @y.setter
     def y(self, value):
         value = int(value)
-        if value > Point.min_y and value < Point.max_y:
+        if value >= Point.min_y and value < Point.max_y:
             self._y = value
         else:
             raise ValueError()
@@ -83,25 +83,12 @@ class Tetris_Board:
         color = random.randrange(0, self.color_count)
         position = Point(int(self.width / 2), 0)
         p = Tetris_Piece(pattern, position, color)
-        for i in range(5):
-            try:
-                self.transform_piece(Point(0, 0), p)
-                i = -1
-                break
-            except PieceOutOfBoundsException:
-                try:
-                    self.transform_piece(Point(0, 1), p, True)
-                except PieceCantMoveException:
-                    raise GameOverException()
-            except PieceCantMoveException:
-                raise GameOverException()
-        if i != -1:
-            raise GameOverException()
         self.current_piece = p
 
     def merge_piece(self, piece):
         print("Merging piece")
         piece_pattern = piece.get_world_pattern()
+        old = self.grid.copy()
         for point in piece_pattern:
             self.grid[point.y][point.x] = piece.color
         self.set_next_piece()
@@ -119,14 +106,17 @@ class Tetris_Board:
         except PieceOutOfBoundsException:
             self.merge_piece(piece)
 
-    def transform_piece(self, distance, piece, ignore_outofbounds=False):
+    def transform_piece(self, distance, piece):
         #Check if transform valid
         pattern = piece.get_world_pattern()
         for point in pattern:
-            new_point = Point(point.x + distance.x, point.y + distance.y)
+            try:
+                new_point = Point(point.x + distance.x, point.y + distance.y)
+            except ValueError:
+                raise PieceOutOfBoundsException()
             if self.grid[new_point.y][new_point.x] != 0:
                 raise PieceCantMoveException()
-        piece.position = Point(piece.position.x + distance.y, piece.position.x + distance.y)
+        piece.position = Point(piece.position.x + distance.x, piece.position.y + distance.y)
 
     def rotate_piece(self, direction, piece):
         assert(direction == 1 or direction == -1)
@@ -141,17 +131,18 @@ class Tetris_Piece:
         [(0, 0), (1, 0), (0, 1), (1, 1)],   #O
         [(-1, 0), (0, 0), (0, 1), (1, 1)],  #S
         [(-1, 0), (0, 0), (1, 0), (0, 1)],  #T
-        [(-1, -1), (0, -1), (0, 0), (1, 0)] #Z
+        [(-1, 0), (0, 0), (0, 1), (1, 1)]   #Z
     )
 
     Point.min_x = -3
     Point.max_x = 3
-    Point.min_y = -3
-    Point.max_y = 3
+    Point.min_y = 0
+    Point.max_y = 5
 
     for pattern in Patterns:
         for index, pos in enumerate(pattern):
             pattern[index] = Point(pos[0], pos[1])
+    del index, pos, pattern
 
     def __init__(self, pattern, position, color):
         self.pattern = pattern
