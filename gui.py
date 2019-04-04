@@ -12,7 +12,17 @@ class Tetris_Board_Renderer:
         surface = pygame.Surface(self.size)
         surface.fill((255, 255, 255))
         surface.blit(self.background_image, (0, 0))
-
+        for y, row in enumerate(self.board.grid):
+            for x, value in enumerate(row):
+                if value > 0:
+                    surface.blit(tiles[value - 1], (x *32, y * 32))
+        try:
+            piece = self.board.current_piece
+            value = piece.color
+            for x, y in piece.get_world_pattern():
+                surface.blit(tiles[value - 1], (x * 32, y * 32))
+        except:
+            pass
         return surface
 
 tiles = []

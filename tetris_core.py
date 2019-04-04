@@ -8,6 +8,10 @@ class Tetris_Game:
             boards.append(b)
         self.boards = boards
 
+    def start(self, level):
+        self.level = level
+        self.score = 0
+
 class Tetris_Board:
     def __init__(self, size, color_count):
         self.width, self.height = size
@@ -18,17 +22,19 @@ class Tetris_Board:
     def set_next_piece(self):
         pattern = random.choice(Tetris_Piece.Patterns)
         color = random.randrange(0, self.color_count)
-        position = (self.width / 2, 0)
+        position = (int(self.width / 2), 0)
         p = Tetris_Piece(pattern, position, color)
-        while True:
+        for i in range(5):
             try:
-                self.transform_piece((0, 1), p)
+                self.transform_piece((0, 0), p)
+                i = -1
                 break
             except PieceOutOfBoundsException:
-                pass
+                self.transform_piece((0, 1), p, True)
             except PieceCantMoveException:
                 raise GameOverException()
-        
+        if i != -1:
+            raise GameOverException()
         self.current_piece = p
 
     def merge_piece(self, piece):
@@ -42,12 +48,12 @@ class Tetris_Board:
         except PieceCantMoveException:
             self.merge_piece(piece)
 
-    def transform_piece(self, distance, piece):
+    def transform_piece(self, distance, piece, ignore_outofbounds=False):
         #Check if transform valid
         pattern = piece.get_world_pattern()
         for point in pattern:
             new_point = (point[0] + distance[0], point[1], distance[1])
-            if point[0] < 0 or point[1] < 0:
+            if (point[0] < 0 or point[1] < 0) and not ignore_outofbounds:
                 raise PieceOutOfBoundsException()
             if self.grid[new_point[1]][new_point[0]] != 0:
                 raise PieceCantMoveException()
