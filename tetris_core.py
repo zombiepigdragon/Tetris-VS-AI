@@ -47,7 +47,10 @@ class Tetris_Board:
                 i = -1
                 break
             except PieceOutOfBoundsException:
-                self.transform_piece((0, 1), p, True)
+                try:
+                    self.transform_piece((0, 1), p, True)
+                except PieceCantMoveException:
+                    raise GameOverException()
             except PieceCantMoveException:
                 raise GameOverException()
         if i != -1:
@@ -126,15 +129,14 @@ class Tetris_Piece:
 
 class PieceCantMoveException(Exception):
     def __init__(self):
+        import traceback
         print("Piece can't move")
+        for line in traceback.format_stack():
+            print(line.strip())
 
 class PieceOutOfBoundsException(Exception):
     def __init__(self):
         print("Piece out of bounds")
-
-class NewPieceException(Exception):
-    def __init__(self):
-        print("New piece")
 
 class GameOverException(Exception):
     def __init__(self):
