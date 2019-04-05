@@ -1,7 +1,7 @@
 import tetris_core
 import os, pygame
 
-class Tetris_Board_Renderer:
+class TetrisBoardRenderer:
     def __init__(self, board, size, background_image, tiles):
         self.board = board
         self.size = size
@@ -33,8 +33,8 @@ for file in os.listdir("Assets/Tiles/"):
 background_image = pygame.image.load("Assets/grid.png")
 
 def main():
-    game = tetris_core.Tetris_Game(7, (12, 20), 1)
-    board = Tetris_Board_Renderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
+    game = tetris_core.TetrisGame(7, (12, 20), 1)
+    board = TetrisBoardRenderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     running = True
     pygame.init()
     clock = pygame.time.Clock()

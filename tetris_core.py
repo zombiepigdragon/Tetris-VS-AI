@@ -40,12 +40,12 @@ class Point:
                 self.x = combined[0]
                 self.y = combined[1]
 
-class Tetris_Game:
+class TetrisGame:
     def __init__(self, color_count, board_size, num_boards):
         boards = []
         Point.max_x, Point.max_y = board_size
         for _ in range(num_boards):
-            b = Tetris_Board(board_size, color_count)
+            b = TetrisBoard(board_size, color_count)
             boards.append(b)
         self.boards = boards
 
@@ -69,7 +69,7 @@ class Tetris_Game:
     def get_drop_time(self, level):
         return int(1000 / level)
 
-class Tetris_Board:
+class TetrisBoard:
     def __init__(self, size, color_count):
         self.width, self.height = size
         #Make a width by height grid of 0s
@@ -79,10 +79,10 @@ class Tetris_Board:
 
     def set_next_piece(self):
         print("Setting piece")
-        pattern = random.choice(Tetris_Piece.Patterns)
+        pattern = random.choice(TetrisPiece.Patterns)
         color = random.randrange(0, self.color_count)
         position = Point(int(self.width / 2), 0)
-        p = Tetris_Piece(pattern, position, color)
+        p = TetrisPiece(pattern, position, color)
         self.current_piece = p
 
     def merge_piece(self, piece):
@@ -122,7 +122,7 @@ class Tetris_Board:
         assert(direction == 1 or direction == -1)
         piece.pattern = piece.get_rotated_pattern(direction)
 
-class Tetris_Piece:
+class TetrisPiece:
 
     Patterns = (
         [(-1, 0), (0, 0), (1, 0), (2, 0)],  #I
