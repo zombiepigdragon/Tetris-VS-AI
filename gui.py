@@ -40,7 +40,7 @@ def main():
     pygame.init()
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode((12 * 32, 20 * 32))
-    game.start(1)
+    game.start()
     while running:
         try:
             elasped = clock.tick(60)

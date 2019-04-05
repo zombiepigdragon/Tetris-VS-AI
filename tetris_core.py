@@ -74,19 +74,30 @@ class TetrisGame:
             boards.append(b)
         self.boards = boards
 
-    def start(self, level):
-        self.level = level
+    def start(self):
         self.score = 0
         self.current_time = 0
+        self.level = 0
         for b in self.boards:
             b.time_since_last_move_down = 0
+            b.cleared_lines = 0
             b.set_next_piece()
 
     def update(self):
+        self.level = self.calculate_level()
         drop_time = self.get_drop_time(self.level)
         for b in self.boards:
             b.move_piece_down_if_time(drop_time, b.current_piece)
             b.clear_lines()
+
+    def calculate_level(self):
+        total_lines = 0
+        for b in self.boards:
+            total_lines += b.cleared_lines
+        level = int(total_lines / 10) + 1
+        if self.level != level:
+            print("New level:", level)
+        return level
 
     def get_drop_time(self, level):
         return int(1000 / level)
@@ -118,6 +129,7 @@ class TetrisBoard:
         #Make a width by height grid of 0s
         self.grid = [[0 for x in range(self.width)] for y in range(self.height)]
         self.color_count = color_count
+        self.cleared_lines = 0
 
     def set_next_piece(self):
         pattern = random.choice(TetrisPiece.Patterns)
@@ -193,6 +205,7 @@ class TetrisBoard:
             else:
                 del self.grid[index]
                 self.grid.insert(0, [0 for x in range(self.width)])
+                self.cleared_lines += 1
 
 class TetrisPiece:
 
