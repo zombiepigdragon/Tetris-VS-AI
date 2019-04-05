@@ -1,4 +1,5 @@
 import random
+from pygame.time import get_ticks
 
 class Point:
     min_x = 0
@@ -58,13 +59,9 @@ class TetrisGame:
             b.set_next_piece()
 
     def update(self):
+        drop_time = self.get_drop_time(self.level)
         for b in self.boards:
-            b.move_piece_down_if_time(self.get_drop_time(self.level), b.current_piece)
-
-    def add_delta_time(self, millis):
-        self.current_time += millis
-        for b in self.boards:
-            b.time_since_last_move_down += millis
+            b.move_piece_down_if_time(drop_time, b.current_piece)
 
     def get_drop_time(self, level):
         return int(1000 / level)
@@ -75,27 +72,27 @@ class TetrisBoard:
         #Make a width by height grid of 0s
         self.grid = [[0 for x in range(self.width)] for y in range(self.height)]
         self.color_count = color_count
-        self.time_since_last_move_down = 0
 
     def set_next_piece(self):
-        print("Setting piece")
         pattern = random.choice(TetrisPiece.Patterns)
-        color = random.randrange(0, self.color_count)
+        color = random.randrange(1, self.color_count)
         position = Point(int(self.width / 2), 0)
         p = TetrisPiece(pattern, position, color)
+        try:
+            self.transform_piece(Point(0, 0), p)
+        except PieceCantMoveException:
+            raise GameOverException()
         self.current_piece = p
+        self.last_down_time = get_ticks()
 
     def merge_piece(self, piece):
-        print("Merging piece")
         piece_pattern = piece.get_world_pattern()
-        old = self.grid.copy()
         for point in piece_pattern:
             self.grid[point.y][point.x] = piece.color
         self.set_next_piece()
 
     def move_piece_down_if_time(self, threshold, piece):
-        if self.time_since_last_move_down > threshold:
-            self.time_since_last_move_down = 0
+        if get_ticks() - self.last_down_time > threshold:
             self.move_piece_down(piece)
 
     def move_piece_down(self, piece):
@@ -105,6 +102,7 @@ class TetrisBoard:
             self.merge_piece(piece)
         except PieceOutOfBoundsException:
             self.merge_piece(piece)
+        self.last_down_time = get_ticks()
 
     def transform_piece(self, distance, piece):
         #Check if transform valid
@@ -147,6 +145,7 @@ class TetrisPiece:
     def __init__(self, pattern, position, color):
         self.pattern = pattern
         self.position = position
+        assert(color > 0)
         self.color = color
     
     def get_world_pattern(self):
@@ -163,12 +162,10 @@ class TetrisPiece:
         return pattern
 
 class PieceCantMoveException(Exception):
-    def __init__(self):
-        print("Piece can't move")
+    pass
 
 class PieceOutOfBoundsException(Exception):
-    def __init__(self):
-        print("Piece out of bounds")
+    pass
 
 class GameOverException(Exception):
     def __init__(self):
