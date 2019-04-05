@@ -1,4 +1,5 @@
 import tetris_core
+from tetris_core import Actions
 import os, pygame
 
 class TetrisBoardRenderer:
@@ -39,14 +40,26 @@ def main():
     pygame.init()
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode((12 * 32, 20 * 32))
-    game.start(5)
+    game.start(1)
     while running:
         try:
             elasped = clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            game.add_delta_time(elasped)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_s:
+                        game.handle_event(Actions.MOVE_DOWN, 0)
+                    elif event.key == pygame.K_a:
+                        game.handle_event(Actions.MOVE_LEFT, 0)
+                    elif event.key == pygame.K_d:
+                        game.handle_event(Actions.MOVE_RIGHT, 0)
+                    elif event.key == pygame.K_w:
+                        game.handle_event(Actions.HARD_DROP, 0)
+                    elif event.key == pygame.K_q:
+                        game.handle_event(Actions.ROTATE_CCW, 0)
+                    elif event.key == pygame.K_e:
+                        game.handle_event(Actions.ROTATE_CW, 0)
             game.update()
             display = board.render()
             screen.blit(display, (0,0))

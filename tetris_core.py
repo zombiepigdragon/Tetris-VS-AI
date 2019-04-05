@@ -1,4 +1,5 @@
 import random
+from enum import Enum
 from pygame.time import get_ticks
 
 class Point:
@@ -31,15 +32,38 @@ class Point:
         else:
             raise ValueError()
 
-    def __init__(self, x, y, combined=None):
-        self.x = x
-        self.y = y
+    def __str__(self):
+        return "(" + str(self.x) + ", " + str(self.y) + ")"
+
+    def __repr__(self):
+        return "Point(" + str(self.x) + ", " + str(self.y) + ")"
+
+    def __init__(self, x, y, combined=None, ignore_limits=False):
+        if ignore_limits:
+            self._x = x
+            self._y = y
+        else:
+            self.x = x
+            self.y = y
         if combined is not None:
             if len(combined) != 2:
                 raise ValueError()
             else:
-                self.x = combined[0]
-                self.y = combined[1]
+                if ignore_limits:
+                    self._x = combined[0]
+                    self._y = combined[1]
+                else:
+                    self.x = combined[0]
+                    self.y = combined[1]
+                
+
+class Actions(Enum):
+    MOVE_DOWN = 1
+    MOVE_LEFT = 2
+    MOVE_RIGHT = 3
+    HARD_DROP = 4
+    ROTATE_CW = 5
+    ROTATE_CCW = 6
 
 class TetrisGame:
     def __init__(self, color_count, board_size, num_boards):
@@ -65,6 +89,27 @@ class TetrisGame:
 
     def get_drop_time(self, level):
         return int(1000 / level)
+
+    def handle_event(self, event, board_index):
+        board = self.boards[board_index]
+        piece = board.current_piece
+        try:
+            if event is Actions.MOVE_DOWN:
+                board.move_piece_down(piece)
+            elif event is Actions.MOVE_LEFT:
+                board.transform_piece(Point(-1, 0, ignore_limits=True), piece)
+            elif event is Actions.MOVE_RIGHT:
+                board.transform_piece(Point(1, 0, ignore_limits=True), piece)
+            elif event is Actions.HARD_DROP:
+                board.hard_drop_piece(piece)
+            elif event is Actions.ROTATE_CW:
+                board.rotate_piece(1, piece)
+            elif event is Actions.ROTATE_CCW:
+                board.rotate_piece(-1, piece)
+        except PieceCantMoveException:
+            pass
+        except PieceOutOfBoundsException:
+            pass
 
 class TetrisBoard:
     def __init__(self, size, color_count):
@@ -104,6 +149,17 @@ class TetrisBoard:
             self.merge_piece(piece)
         self.last_down_time = get_ticks()
 
+    def hard_drop_piece(self, piece):
+        can_lower = True
+        while can_lower:
+            try:
+                self.transform_piece(Point(0, 1), piece)
+            except PieceCantMoveException:
+                can_lower = False
+            except PieceOutOfBoundsException:
+                can_lower = False
+        self.merge_piece(piece)
+
     def transform_piece(self, distance, piece):
         #Check if transform valid
         pattern = piece.get_world_pattern()
@@ -118,7 +174,15 @@ class TetrisBoard:
 
     def rotate_piece(self, direction, piece):
         assert(direction == 1 or direction == -1)
-        piece.pattern = piece.get_rotated_pattern(direction)
+        try:
+            pattern = piece.get_rotated_pattern(direction)
+            w_pattern = piece.get_world_pattern(pattern)
+            for point in w_pattern:
+                if self.grid[point.y][point.x] != 0:
+                    raise PieceCantMoveException()
+        except ValueError:
+            raise PieceCantMoveException()
+        piece.pattern = pattern
 
 class TetrisPiece:
 
@@ -132,14 +196,9 @@ class TetrisPiece:
         [(-1, 0), (0, 0), (0, 1), (1, 1)]   #Z
     )
 
-    Point.min_x = -3
-    Point.max_x = 3
-    Point.min_y = 0
-    Point.max_y = 5
-
     for pattern in Patterns:
         for index, pos in enumerate(pattern):
-            pattern[index] = Point(pos[0], pos[1])
+            pattern[index] = Point(pos[0], pos[1], ignore_limits=True)
     del index, pos, pattern
 
     def __init__(self, pattern, position, color):
@@ -148,8 +207,10 @@ class TetrisPiece:
         assert(color > 0)
         self.color = color
     
-    def get_world_pattern(self):
-        w_pattern = self.pattern.copy()
+    def get_world_pattern(self, pattern=None):
+        if pattern == None:
+            pattern = self.pattern
+        w_pattern = pattern.copy()
         for index, point in enumerate(w_pattern):
             w_pattern[index] = Point(point.x + self.position.x, point.y + self.position.y)
         return w_pattern
@@ -157,7 +218,7 @@ class TetrisPiece:
     def get_rotated_pattern(self, direction):
         pattern = self.pattern.copy()
         for index, old_point in enumerate(pattern):
-            new_point = (-direction * old_point.y, direction * old_point.x)
+            new_point = Point(-direction * old_point.y, direction * old_point.x, ignore_limits=True)
             pattern[index] = new_point
         return pattern
 
