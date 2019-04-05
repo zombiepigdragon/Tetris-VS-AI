@@ -86,6 +86,7 @@ class TetrisGame:
         drop_time = self.get_drop_time(self.level)
         for b in self.boards:
             b.move_piece_down_if_time(drop_time, b.current_piece)
+            b.clear_lines()
 
     def get_drop_time(self, level):
         return int(1000 / level)
@@ -183,6 +184,15 @@ class TetrisBoard:
         except ValueError:
             raise PieceCantMoveException()
         piece.pattern = pattern
+
+    def clear_lines(self):
+        for index, row in enumerate(self.grid):
+            for value in row:
+                if value == 0:
+                    break
+            else:
+                del self.grid[index]
+                self.grid.insert(0, [0 for x in range(self.width)])
 
 class TetrisPiece:
 
