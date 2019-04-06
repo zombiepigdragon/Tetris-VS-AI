@@ -1,4 +1,5 @@
 import tetris_core
+from ai import BasicTetrisAI
 from tetris_core import Actions
 import os, pygame
 
@@ -37,6 +38,7 @@ def main():
     game = tetris_core.TetrisGame(7, (12, 20), 2)
     playerboard = TetrisBoardRenderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     aiboard = TetrisBoardRenderer(game.boards[1], (12 * 32, 20 * 32), background_image, tiles)
+    ai = BasicTetrisAI(game.boards[1], 7)
     running = True
     pygame.init()
     clock = pygame.time.Clock()
@@ -61,6 +63,9 @@ def main():
                         game.handle_event(Actions.ROTATE_CCW, 0)
                     elif event.key == pygame.K_e:
                         game.handle_event(Actions.ROTATE_CW, 0)
+            ai_action = ai.run()
+            if ai_action is not None:
+                game.handle_event(ai_action, 1)
             game.update()
             pdisplay = playerboard.render()
             screen.blit(pdisplay, (0,0))

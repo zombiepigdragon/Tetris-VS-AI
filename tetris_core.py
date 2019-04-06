@@ -1,4 +1,5 @@
 import random
+import copy
 from enum import Enum
 from pygame.time import get_ticks
 
@@ -213,6 +214,30 @@ class TetrisBoard:
                 self.grid.insert(0, [0 for x in range(self.width)])
                 self.cleared_lines += 1
 
+    def count_gaps(self):
+        rotated = list(zip(*self.grid[::-1])) #Turn the board 90 degrees
+        gaps = 0
+        for column in rotated:
+            seen_gap = False
+            for row in column:
+                if row == 0:
+                    seen_gap = True #Once there's one empty space, all non-empty spaces are gaps
+                else:
+                    if seen_gap:
+                        gaps += 1 #So count those gaps
+        return gaps
+
+    def count_rows(self):
+        count = 0
+        for index, row in enumerate(self.grid):
+            for column in row:
+                if column != 0:
+                    count = index
+        return count
+
+    def copy(self):
+        return copy.deepcopy(self)
+
 class TetrisPiece:
 
     Patterns = (
@@ -250,6 +275,12 @@ class TetrisPiece:
             new_point = Translation(-direction * old_point.y, direction * old_point.x)
             pattern[index] = new_point
         return pattern
+
+    def copy(self):
+        return copy.copy(self)
+
+    def __copy__(self):
+        return TetrisPiece(self.pattern, self.position, self.color)
 
 class PieceCantMoveException(Exception):
     pass
