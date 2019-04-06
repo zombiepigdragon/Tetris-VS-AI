@@ -2,7 +2,24 @@ import random
 from enum import Enum
 from pygame.time import get_ticks
 
-class Point:
+class Translation:
+    def __str__(self):
+        return "(" + str(self.x) + ", " + str(self.y) + ")"
+
+    def __repr__(self):
+        return "Translation(" + str(self.x) + ", " + str(self.y) + ")"
+
+    def __init__(self, x, y, combined=None):
+        self.x = x
+        self.y = y
+        if combined is not None:
+            if len(combined) != 2:
+                raise ValueError()
+            else:
+                self.x = combined[0]
+                self.y = combined[1]
+
+class Point(Translation):
     min_x = 0
     min_y = 0
     max_x = 0
@@ -32,29 +49,18 @@ class Point:
         else:
             raise ValueError()
 
-    def __str__(self):
-        return "(" + str(self.x) + ", " + str(self.y) + ")"
-
     def __repr__(self):
         return "Point(" + str(self.x) + ", " + str(self.y) + ")"
 
-    def __init__(self, x, y, combined=None, ignore_limits=False):
-        if ignore_limits:
-            self._x = x
-            self._y = y
-        else:
-            self.x = x
-            self.y = y
+    def __init__(self, x, y, combined=None):
+        self.x = x
+        self.y = y
         if combined is not None:
             if len(combined) != 2:
                 raise ValueError()
             else:
-                if ignore_limits:
-                    self._x = combined[0]
-                    self._y = combined[1]
-                else:
-                    self.x = combined[0]
-                    self.y = combined[1]
+                self.x = combined[0]
+                self.y = combined[1]
                 
 
 class Actions(Enum):
@@ -109,9 +115,9 @@ class TetrisGame:
             if event is Actions.MOVE_DOWN:
                 board.move_piece_down(piece)
             elif event is Actions.MOVE_LEFT:
-                board.transform_piece(Point(-1, 0, ignore_limits=True), piece)
+                board.transform_piece(Translation(-1, 0), piece)
             elif event is Actions.MOVE_RIGHT:
-                board.transform_piece(Point(1, 0, ignore_limits=True), piece)
+                board.transform_piece(Translation(1, 0), piece)
             elif event is Actions.HARD_DROP:
                 board.hard_drop_piece(piece)
             elif event is Actions.ROTATE_CW:
@@ -137,7 +143,7 @@ class TetrisBoard:
         position = Point(int(self.width / 2), 0)
         p = TetrisPiece(pattern, position, color)
         try:
-            self.transform_piece(Point(0, 0), p)
+            self.transform_piece(Translation(0, 0), p)
         except PieceCantMoveException:
             raise GameOverException()
         self.current_piece = p
@@ -155,7 +161,7 @@ class TetrisBoard:
 
     def move_piece_down(self, piece):
         try:
-            self.transform_piece(Point(0, 1), piece)
+            self.transform_piece(Translation(0, 1), piece)
         except PieceCantMoveException:
             self.merge_piece(piece)
         except PieceOutOfBoundsException:
@@ -166,7 +172,7 @@ class TetrisBoard:
         can_lower = True
         while can_lower:
             try:
-                self.transform_piece(Point(0, 1), piece)
+                self.transform_piece(Translation(0, 1), piece)
             except PieceCantMoveException:
                 can_lower = False
             except PieceOutOfBoundsException:
@@ -221,7 +227,7 @@ class TetrisPiece:
 
     for pattern in Patterns:
         for index, pos in enumerate(pattern):
-            pattern[index] = Point(pos[0], pos[1], ignore_limits=True)
+            pattern[index] = Translation(pos[0], pos[1])
     del index, pos, pattern
 
     def __init__(self, pattern, position, color):
@@ -241,7 +247,7 @@ class TetrisPiece:
     def get_rotated_pattern(self, direction):
         pattern = self.pattern.copy()
         for index, old_point in enumerate(pattern):
-            new_point = Point(-direction * old_point.y, direction * old_point.x, ignore_limits=True)
+            new_point = Translation(-direction * old_point.y, direction * old_point.x)
             pattern[index] = new_point
         return pattern
 
