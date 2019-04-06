@@ -35,6 +35,7 @@ for file in os.listdir("Assets/Tiles/"):
 background_image = pygame.image.load("Assets/grid.png")
 
 def main():
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "10, 10"
     game = tetris_core.TetrisGame(7, (12, 20), 2)
     playerboard = TetrisBoardRenderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     aiboard = TetrisBoardRenderer(game.boards[1], (12 * 32, 20 * 32), background_image, tiles)

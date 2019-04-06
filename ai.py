@@ -23,8 +23,18 @@ class BasicTetrisAI:
             self.set_next_move_time()
             self.set_next_move()
             if self.next_move is not None:
-                return self.next_move.move
+                move = self.next_move.move
+                if move == Actions.ROTATE_CCW or move == Actions.ROTATE_CW:
+                    try:
+                        p = self.board.current_piece.copy()
+                        direction = 1 if move == Actions.ROTATE_CW else -1
+                        p.pattern = p.get_rotated_pattern(direction)
+                        p.get_world_pattern()
+                    except ValueError:
+                        return Actions.MOVE_DOWN
+                return move
             else:
+                #assert(self.board.last_piece_position == self.next_move_position)
                 return None
 
     def set_next_move(self):
@@ -38,6 +48,8 @@ class BasicTetrisAI:
             outcomes = [outcome for outcome in outcomes if outcome.final_position.y == lowest_piece_y]
             best_outcome = outcomes[0]
             self.next_move = BasicTetrisAI.Move(best_outcome.rotations_needed, best_outcome.translations_needed)
+            self.next_move.outcome = best_outcome
+            self.next_move_position = best_outcome.final_position
         else:
             self.next_move = self.next_move.next_move
 
@@ -72,7 +84,7 @@ class BasicTetrisAI:
                     b.hard_drop_piece(p)
                     move = BasicTetrisAI.PotientialOutcome(
                         b.count_gaps(), b.count_rows(), r_index, 
-                        Translation(board.current_piece.position.x - p.position.x, 0), p.position)
+                        Translation(-(board.current_piece.position.x - p.position.x), 0), p.position)
                     possible_outcomes.append(move)
             return possible_outcomes
 
@@ -85,12 +97,12 @@ class BasicTetrisAI:
 
     class Move:
         def __init__(self, roatations_needed, translations_needed):
-            if roatations_needed > 0:
+            if roatations_needed < 0:
                 self.move = Actions.ROTATE_CCW
-                roatations_needed -= 1
-            elif roatations_needed < 0:
-                self.move = Actions.ROTATE_CW
                 roatations_needed += 1
+            elif roatations_needed > 0:
+                self.move = Actions.ROTATE_CW
+                roatations_needed -= 1
             elif translations_needed.x > 0:
                 self.move = Actions.MOVE_RIGHT
                 translations_needed.x -= 1

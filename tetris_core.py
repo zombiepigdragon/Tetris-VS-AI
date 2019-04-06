@@ -10,6 +10,9 @@ class Translation:
     def __repr__(self):
         return "Translation(" + str(self.x) + ", " + str(self.y) + ")"
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
     def __init__(self, x, y, combined=None):
         self.x = x
         self.y = y
@@ -154,6 +157,7 @@ class TetrisBoard:
         piece_pattern = piece.get_world_pattern()
         for point in piece_pattern:
             self.grid[point.y][point.x] = piece.color
+        self.last_piece_position = piece.position
         self.set_next_piece()
 
     def move_piece_down_if_time(self, threshold, piece):
@@ -217,10 +221,10 @@ class TetrisBoard:
     def count_gaps(self):
         rotated = list(zip(*self.grid[::-1])) #Turn the board 90 degrees
         gaps = 0
-        for column in rotated:
+        for row in rotated:
             seen_gap = False
-            for row in column:
-                if row == 0:
+            for column in row:
+                if column == 0:
                     seen_gap = True #Once there's one empty space, all non-empty spaces are gaps
                 else:
                     if seen_gap:
@@ -277,10 +281,7 @@ class TetrisPiece:
         return pattern
 
     def copy(self):
-        return copy.copy(self)
-
-    def __copy__(self):
-        return TetrisPiece(self.pattern, self.position, self.color)
+        return copy.deepcopy(self)
 
 class PieceCantMoveException(Exception):
     pass
