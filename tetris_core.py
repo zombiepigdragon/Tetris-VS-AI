@@ -129,9 +129,10 @@ class TetrisGame:
             elif event is Actions.ROTATE_CCW:
                 board.rotate_piece(-1, piece)
         except PieceCantMoveException:
-            pass
+            return False
         except PieceOutOfBoundsException:
-            pass
+            return False
+        return True #No error occured
 
 class TetrisBoard:
     def __init__(self, size, color_count):
@@ -186,7 +187,10 @@ class TetrisBoard:
 
     def transform_piece(self, distance, piece):
         #Check if transform valid
-        pattern = piece.get_world_pattern()
+        try:
+            pattern = piece.get_world_pattern()
+        except ValueError:
+            raise PieceOutOfBoundsException()
         for point in pattern:
             try:
                 new_point = Point(point.x + distance.x, point.y + distance.y)
@@ -219,21 +223,21 @@ class TetrisBoard:
                 self.cleared_lines += 1
 
     def count_gaps(self):
-        rotated = list(zip(*self.grid[::-1])) #Turn the board 90 degrees
+        rotated = list(zip(*self.grid)) #Turn the board -90 degrees
         gaps = 0
         for row in rotated:
-            seen_gap = False
+            seen_piece = False
             for column in row:
                 if column == 0:
-                    seen_gap = True #Once there's one empty space, all non-empty spaces are gaps
+                    if seen_piece:
+                        gaps += 1
                 else:
-                    if seen_gap:
-                        gaps += 1 #So count those gaps
+                    seen_piece = True
         return gaps
 
     def count_rows(self):
         count = 0
-        for index, row in enumerate(self.grid):
+        for index, row in enumerate(reversed(self.grid)):
             for column in row:
                 if column != 0:
                     count = index

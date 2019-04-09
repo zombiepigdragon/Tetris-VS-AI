@@ -3,10 +3,13 @@ import random
 from pygame.time import get_ticks
 
 class BasicTetrisAI:
-    def __init__(self, board, difficulty):
-        self.board = board
+    def __init__(self, game, board_index, difficulty):
+        self.game = game
+        self.board_index = board_index
+        self.board = game.boards[board_index]
         self.last_time = get_ticks()
         self.difficulty = difficulty
+        self.success = True
         self.next_move = None
         self.set_next_move_time()
 
@@ -21,20 +24,13 @@ class BasicTetrisAI:
         if get_ticks() - self.last_time > self.next_move_time:
             self.last_time = get_ticks()
             self.set_next_move_time()
-            self.set_next_move()
+            if self.success:
+                self.set_next_move()
             if self.next_move is not None:
                 move = self.next_move.move
-                if move == Actions.ROTATE_CCW or move == Actions.ROTATE_CW:
-                    try:
-                        p = self.board.current_piece.copy()
-                        direction = 1 if move == Actions.ROTATE_CW else -1
-                        p.pattern = p.get_rotated_pattern(direction)
-                        p.get_world_pattern()
-                    except ValueError:
-                        return Actions.MOVE_DOWN
-                return move
+                self.success = self.game.handle_event(move, 1)
             else:
-                #assert(self.board.last_piece_position == self.next_move_position)
+                self.success = True
                 return None
 
     def set_next_move(self):
@@ -47,6 +43,7 @@ class BasicTetrisAI:
             lowest_piece_y = max([outcome.final_position.y for outcome in outcomes])
             outcomes = [outcome for outcome in outcomes if outcome.final_position.y == lowest_piece_y]
             best_outcome = outcomes[0]
+            print(best_outcome)
             self.next_move = BasicTetrisAI.Move(best_outcome.rotations_needed, best_outcome.translations_needed)
             self.next_move.outcome = best_outcome
             self.next_move_position = best_outcome.final_position
@@ -62,23 +59,28 @@ class BasicTetrisAI:
             for i in range(3):
                 p = rotated_pieces[i]
                 rotated_pieces.append(TetrisPiece(p.get_rotated_pattern(1), p.position, p.color))
+            for p in rotated_pieces:
+                print(p.pattern)
             possible_outcomes = []
             for r_index, r_piece in enumerate(rotated_pieces):
                 for x in range(board.width):
                     p = r_piece.copy()
-                    p.position = Point(x, 0)
-                    for _ in range(2):
-                        try:
-                            board.transform_piece(Translation(0, 0), p)
-                            break
-                        except PieceCantMoveException:
-                            continue
-                        except ValueError:
-                            try:
-                                board.transform_piece(Translation(0, 1), p)
-                            except ValueError:
-                                continue
-                    else:
+                    p.position = Translation(x, 0)
+                    valid = True
+                    for point in p.pattern:
+                        def move_into_valid_y(pattern):
+                            for point in pattern:
+                                point.y += 1
+                            for point in pattern:
+                                if point.y < 0:
+                                    move_into_valid_y(pattern)
+                                    break
+                        w_point = Translation(point.x + p.position.x, point.y + p.position.y)
+                        if w_point.x < 0 or w_point.x >= board.width:
+                            valid = False
+                        if w_point.y < 0:
+                            move_into_valid_y(p.pattern)
+                    if not valid:
                         continue
                     b = board.copy()
                     b.hard_drop_piece(p)
@@ -95,9 +97,17 @@ class BasicTetrisAI:
             self.translations_needed = translations_needed
             self.final_position = final_position
 
+        def __repr__(self):
+            return "Outcome(gaps: " + str(self.gaps) + ", height: " + str(self.height) + ", rotations_needed: " + \
+            str(self.rotations_needed) + ", translations_needed: " + str(self.translations_needed) + \
+            ", final_position: " + str(self.final_position) + ")"
+
     class Move:
         def __init__(self, roatations_needed, translations_needed):
-            if roatations_needed < 0:
+            if translations_needed.y > 0:
+                self.move = Actions.MOVE_DOWN
+                translations_needed.y -= 1
+            elif roatations_needed < 0:
                 self.move = Actions.ROTATE_CCW
                 roatations_needed += 1
             elif roatations_needed > 0:
@@ -114,3 +124,6 @@ class BasicTetrisAI:
                 self.next_move = None
                 return
             self.next_move = BasicTetrisAI.Move(roatations_needed, translations_needed)
+
+        def __repr__(self):
+            return "Move(" + str(self.move) + ((", " + repr(self.next_move) + ")") if self.next_move is not None else ")")

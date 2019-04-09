@@ -39,7 +39,7 @@ def main():
     game = tetris_core.TetrisGame(7, (12, 20), 2)
     playerboard = TetrisBoardRenderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     aiboard = TetrisBoardRenderer(game.boards[1], (12 * 32, 20 * 32), background_image, tiles)
-    ai = BasicTetrisAI(game.boards[1], 7)
+    ai = BasicTetrisAI(game, 1, 7)
     running = True
     pygame.init()
     clock = pygame.time.Clock()
@@ -75,6 +75,7 @@ def main():
             pygame.display.flip()
         except tetris_core.GameOverException:
             running = False
+            input()
     pygame.quit()
 
 if __name__ == "__main__":
