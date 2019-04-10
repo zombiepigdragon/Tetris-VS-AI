@@ -43,7 +43,6 @@ class BasicTetrisAI:
             lowest_piece_y = max([outcome.final_position.y for outcome in outcomes])
             outcomes = [outcome for outcome in outcomes if outcome.final_position.y == lowest_piece_y]
             best_outcome = outcomes[0]
-            print(best_outcome)
             self.next_move = BasicTetrisAI.Move(best_outcome.rotations_needed, best_outcome.translations_needed)
             self.next_move.outcome = best_outcome
             self.next_move_position = best_outcome.final_position
@@ -59,8 +58,6 @@ class BasicTetrisAI:
             for i in range(3):
                 p = rotated_pieces[i]
                 rotated_pieces.append(TetrisPiece(p.get_rotated_pattern(1), p.position, p.color))
-            for p in rotated_pieces:
-                print(p.pattern)
             possible_outcomes = []
             for r_index, r_piece in enumerate(rotated_pieces):
                 for x in range(board.width):

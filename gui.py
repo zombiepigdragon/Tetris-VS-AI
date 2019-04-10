@@ -35,7 +35,6 @@ for file in os.listdir("Assets/Tiles/"):
 background_image = pygame.image.load("Assets/grid.png")
 
 def main():
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "10, 10"
     game = tetris_core.TetrisGame(7, (12, 20), 2)
     playerboard = TetrisBoardRenderer(game.boards[0], (12 * 32, 20 * 32), background_image, tiles)
     aiboard = TetrisBoardRenderer(game.boards[1], (12 * 32, 20 * 32), background_image, tiles)
@@ -64,9 +63,7 @@ def main():
                         game.handle_event(Actions.ROTATE_CCW, 0)
                     elif event.key == pygame.K_e:
                         game.handle_event(Actions.ROTATE_CW, 0)
-            ai_action = ai.run()
-            if ai_action is not None:
-                game.handle_event(ai_action, 1)
+            ai.run()
             game.update()
             pdisplay = playerboard.render()
             screen.blit(pdisplay, (0,0))
@@ -75,7 +72,6 @@ def main():
             pygame.display.flip()
         except tetris_core.GameOverException:
             running = False
-            input()
     pygame.quit()
 
 if __name__ == "__main__":
