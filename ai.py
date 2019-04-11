@@ -9,9 +9,11 @@ class BasicTetrisAI:
         self.board = game.boards[board_index]
         self.last_time = get_ticks()
         self.difficulty = difficulty
+        print("Difficulty:", difficulty)
         self.success = True
         self.next_move = None
         self.set_next_move_time()
+        self.moves_remaining_before_mistake = self.calculate_mistake_moves(difficulty)
 
     def set_next_move_time(self):
         raw_time = 1000 / self.difficulty
@@ -28,6 +30,11 @@ class BasicTetrisAI:
                 self.set_next_move()
             if self.next_move is not None:
                 move = self.next_move.move
+                if (self.moves_remaining_before_mistake == 0):
+                    move = random.choice(list(Actions))
+                    self.moves_remaining_before_mistake = self.calculate_mistake_moves(self.difficulty)
+                else: 
+                    self.moves_remaining_before_mistake -= 1
                 self.success = self.game.handle_event(move, 1)
             else:
                 self.success = True
@@ -48,6 +55,19 @@ class BasicTetrisAI:
             self.next_move_position = best_outcome.final_position
         else:
             self.next_move = self.next_move.next_move
+
+    def calculate_mistake_moves(self, difficulty):
+        if difficulty <= 0:
+            return -1
+        if difficulty > 10:
+            difficulty = 10
+        a = 15 #Probably there's a better way 
+        b = 20
+        minimum = difficulty + b
+        maximum = a * difficulty * difficulty + b * difficulty + difficulty
+        moves = random.randint(minimum, maximum)
+        print(moves, "before mistake")
+        return moves
 
     class PotientialOutcome():
 
