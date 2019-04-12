@@ -40,17 +40,19 @@ def main():
     aiboard = TetrisBoardRenderer(game.boards[1], (12 * 32, 20 * 32), background_image, tiles)
     ai = BasicTetrisAI(game, 1, 7)
     running = True
+    game_over = False
     pygame.init()
     clock = pygame.time.Clock()
+    font = pygame.font.SysFont("Arial", 28)
     screen = pygame.display.set_mode((12 * 32 * 2 + 20, 20 * 32))
     game.start()
     while running:
         try:
-            elasped = clock.tick(60)
+            clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.KEYDOWN and not game_over:
                     if event.key == pygame.K_s:
                         game.handle_event(Actions.MOVE_DOWN, 0)
                     elif event.key == pygame.K_a:
@@ -63,15 +65,21 @@ def main():
                         game.handle_event(Actions.ROTATE_CCW, 0)
                     elif event.key == pygame.K_e:
                         game.handle_event(Actions.ROTATE_CW, 0)
-            ai.run()
-            game.update()
+            if not game_over:
+                ai.run()
+                game.update()
             pdisplay = playerboard.render()
             screen.blit(pdisplay, (0,0))
             aidisplay = aiboard.render()
             screen.blit(aidisplay, (12 * 32 + 20, 0))
+            fpscounter = font.render(str(clock.get_fps()), True, (0,0,0))
+            screen.blit(fpscounter, (10, 10))
+            if game_over:
+                game_over = font.render("Game Over", True, (255,0,0), (255,255,255))
+                screen.blit(game_over, ((12 * 32 * 2 + 20) / 2, (20 * 32) / 2))
             pygame.display.flip()
         except tetris_core.GameOverException:
-            running = False
+            game_over = True
     pygame.quit()
 
 if __name__ == "__main__":
