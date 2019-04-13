@@ -294,5 +294,4 @@ class PieceOutOfBoundsException(Exception):
     pass
 
 class GameOverException(Exception):
-    def __init__(self):
-        print("Game over")
+    pass

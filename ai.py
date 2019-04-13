@@ -1,4 +1,4 @@
-from tetris_core import Actions, Point, Translation, TetrisPiece, PieceCantMoveException, PieceOutOfBoundsException
+from tetris_core import Actions, Point, Translation, TetrisPiece, PieceCantMoveException, PieceOutOfBoundsException, GameOverException
 import random
 from pygame.time import get_ticks
 
@@ -100,7 +100,10 @@ class BasicTetrisAI:
                     if not valid:
                         continue
                     b = board.copy()
-                    b.hard_drop_piece(p)
+                    try:
+                        b.hard_drop_piece(p)
+                    except GameOverException:
+                        continue
                     move = BasicTetrisAI.PotientialOutcome(
                         b.count_gaps(), b.count_rows(), r_index, 
                         Translation(-(board.current_piece.position.x - p.position.x), 0), p.position)

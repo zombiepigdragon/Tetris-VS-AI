@@ -80,6 +80,7 @@ def main():
             pygame.display.flip()
         except tetris_core.GameOverException:
             game_over = True
+            print("Game over")
     pygame.quit()
 
 if __name__ == "__main__":
