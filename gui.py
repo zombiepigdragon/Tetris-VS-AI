@@ -9,16 +9,23 @@ class TetrisBoardRenderer:
         self.size = size
         self.background_image = background_image
         self.tiles = tiles
+        self.cached = None
 
     def render(self):
-        surface = pygame.Surface(self.size)
-        surface.fill((255, 255, 255))
-        surface.blit(self.background_image, (0, 0))
-        for y, row in enumerate(self.board.grid):
-            for x, value in enumerate(row):
-                if value > 0:
-                    surface.blit(tiles[value - 1], (x *32, y * 32))
+        if self.board.changed:
+            surface = pygame.Surface(self.size)
+            surface.fill((255, 255, 255))
+            surface.blit(self.background_image, (0, 0))
+            for y, row in enumerate(self.board.grid):
+                for x, value in enumerate(row):
+                    if value > 0:
+                        surface.blit(tiles[value - 1], (x *32, y * 32))
+            self.cached = surface
+            self.board.changed = False
+        else:
+            surface = self.cached
         try:
+            surface = surface.copy()
             piece = self.board.current_piece
             value = piece.color
             for point in piece.get_world_pattern():

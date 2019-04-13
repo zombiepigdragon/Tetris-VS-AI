@@ -141,6 +141,7 @@ class TetrisBoard:
         self.grid = [[0 for x in range(self.width)] for y in range(self.height)]
         self.color_count = color_count
         self.cleared_lines = 0
+        self.changed = True
 
     def set_next_piece(self):
         pattern = random.choice(TetrisPiece.Patterns)
@@ -160,6 +161,7 @@ class TetrisBoard:
             self.grid[point.y][point.x] = piece.color
         self.last_piece_position = piece.position
         self.set_next_piece()
+        self.changed = True
 
     def move_piece_down_if_time(self, threshold, piece):
         if get_ticks() - self.last_down_time > threshold:
