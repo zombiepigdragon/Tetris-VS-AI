@@ -9,7 +9,6 @@ class BasicTetrisAI:
         self.board = game.boards[board_index]
         self.last_time = get_ticks()
         self.difficulty = difficulty
-        print("Difficulty:", difficulty)
         self.success = True
         self.next_move = None
         self.set_next_move_time()
@@ -66,7 +65,6 @@ class BasicTetrisAI:
         minimum = difficulty + b
         maximum = a * difficulty * difficulty + b * difficulty + difficulty
         moves = random.randint(minimum, maximum)
-        print(moves, "before mistake")
         return moves
 
     class PotientialOutcome():
